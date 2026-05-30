@@ -1,6 +1,9 @@
 package users_transport_http
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+)
 
 type CreateUserRequest struct {
 	FullName    string  `json:"full_name"`
@@ -15,5 +18,8 @@ type CreateUserResponse struct {
 }
 
 func (h *UsersHTTPHandler) CreateUser(rw http.ResponseWriter, r *http.Request) {
+	var request CreateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 
+	}
 }
