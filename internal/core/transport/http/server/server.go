@@ -24,9 +24,10 @@ func NewHTTPServer(
 	middleware ...core_http_middleware.Middleware,
 ) *HTTPServer {
 	return &HTTPServer{
-		mux:    http.NewServeMux(),
-		config: config,
-		log:    log,
+		mux:        http.NewServeMux(),
+		config:     config,
+		log:        log,
+		middleware: middleware,
 	}
 }
 
