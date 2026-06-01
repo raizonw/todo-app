@@ -1,12 +1,18 @@
 package users_transport_http
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/raizonw/todo-app/internal/core/domain"
 	core_http_server "github.com/raizonw/todo-app/internal/core/transport/http/server"
 )
 
 type UsersService interface {
+	CreateUser(
+		ctx context.Context,
+		user domain.User,
+	) (domain.User, error)
 }
 
 type UsersHTTPHandler struct {
