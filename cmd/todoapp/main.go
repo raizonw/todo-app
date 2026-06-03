@@ -8,8 +8,11 @@ import (
 	"syscall"
 
 	core_logger "github.com/raizonw/todo-app/internal/core/logger"
+	core_postgres_pool "github.com/raizonw/todo-app/internal/core/repository/postgres/pool"
 	core_http_middleware "github.com/raizonw/todo-app/internal/core/transport/http/middleware"
 	core_http_server "github.com/raizonw/todo-app/internal/core/transport/http/server"
+	users_postgres_repository "github.com/raizonw/todo-app/internal/features/users/repository/postgres"
+	users_service "github.com/raizonw/todo-app/internal/features/users/service"
 	users_transport_http "github.com/raizonw/todo-app/internal/features/users/transport/http"
 	"go.uber.org/zap"
 )
@@ -29,13 +32,24 @@ func main() {
 	}
 	defer logger.Close()
 
-	logger.Debug("Starting to do application")
+	logger.Debug("initializing postgres connetction pool")
+	pool, err := core_postgres_pool.NewConnectionPool(
+		ctx,
+		core_postgres_pool.NewConfigMust(),
+	)
 
-	usersTransportHTTP := users_transport_http.NewUsersHTTPHandler(nil)
-	usersRoutes := usersTransportHTTP.Routes()
+	if err != nil {
+		logger.Fatal("failed to init postgres connection pool", zap.Error(err))
+	}
 
-	apiVersionRouter := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion1)
-	apiVersionRouter.RegisterRoutes(usersRoutes...)
+	defer pool.Close()
+
+	logger.Debug("initializing feature", zap.String("feature", "users"))
+	usersRepository := users_postgres_repository.NewUsersRepository(pool)
+	usersService := users_service.NewUsersService(usersRepository)
+	usersTransportHTTP := users_transport_http.NewUsersHTTPHandler(usersService)
+
+	logger.Debug("initializing initializing HTTP server")
 
 	httpServer := core_http_server.NewHTTPServer(
 		core_http_server.NewConfigMust(),
@@ -46,6 +60,8 @@ func main() {
 		core_http_middleware.Trace(),
 	)
 
+	apiVersionRouter := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion1)
+	apiVersionRouter.RegisterRoutes(usersTransportHTTP.Routes()...)
 	httpServer.RegisterAPIRouters(apiVersionRouter)
 
 	if err := httpServer.Run(ctx); err != nil {
