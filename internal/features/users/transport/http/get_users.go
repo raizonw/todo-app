@@ -9,7 +9,7 @@ import (
 	core_http_utils "github.com/raizonw/todo-app/internal/core/transport/http/utils"
 )
 
-type GetUserResponse []UserDTOResponse
+type GetUsersResponse []UserDTOResponse
 
 func (h *UsersHTTPHandler) GetUsers(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -33,7 +33,7 @@ func (h *UsersHTTPHandler) GetUsers(rw http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	response := GetUserResponse(usersDTOFromDomains(userDomains))
+	response := GetUsersResponse(usersDTOFromDomains(userDomains))
 
 	responseHandler.JSONResponse(response, http.StatusOK)
 
