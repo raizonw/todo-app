@@ -31,4 +31,7 @@ func (h *UsersHTTPHandler) GetUser(rw http.ResponseWriter, r *http.Request) {
 		)
 	}
 
+	response := GetUserResponse(userDTOFromDomain(user))
+	responseHandler.JSONResponse(response, http.StatusOK)
+
 }
