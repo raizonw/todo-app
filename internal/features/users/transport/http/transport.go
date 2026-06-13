@@ -24,6 +24,11 @@ type UsersService interface {
 		ctx context.Context,
 		id int,
 	) (domain.User, error)
+
+	DeleteUser(
+		ctx context.Context,
+		id int,
+	) error
 }
 
 type UsersHTTPHandler struct {
@@ -54,6 +59,11 @@ func (h *UsersHTTPHandler) Routes() []core_http_server.Route {
 			Method:  http.MethodGet,
 			Path:    "/users/{id}",
 			Handler: h.GetUser,
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/users/{id}",
+			Handler: h.DeleteUser,
 		},
 	}
 }
