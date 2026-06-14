@@ -1,8 +1,6 @@
 package users_transport_http
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/raizonw/todo-app/internal/core/domain"
@@ -30,9 +28,6 @@ func (h *UsersHTTPHandler) CreateUser(rw http.ResponseWriter, r *http.Request) {
 		responseHandler.ErrorResponse(err, "failed to decode and validate HTTP request")
 
 		return
-	}
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		fmt.Println("Unexpected error while creating user")
 	}
 
 	userDomain := domainFromDTO(request)
