@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/raizonw/todo-app/internal/core/domain"
 	core_logger "github.com/raizonw/todo-app/internal/core/logger"
 	core_http_request "github.com/raizonw/todo-app/internal/core/transport/http/request"
@@ -12,10 +13,34 @@ import (
 	core_http_utils "github.com/raizonw/todo-app/internal/core/transport/http/utils"
 )
 
+var requestValidator = validator.New()
+
 type PatchUserRequest struct {
 	FullName    core_http_types.Nullable[string] `json:"full_name"`
 	PhoneNumber core_http_types.Nullable[string] `json:"phone_number"`
 }
+
+func (r *PatchUserRequest) Validate() error {
+	if r.FullName.Set {
+		if r.FullName.Value == nil {
+			return fmt.Errorf("'FullName' can't be NULL")
+		}
+
+		fullNameLen := len([]rune(*r.FullName.Value))
+		if fullNameLen < 3 || fullNameLen > 100 {
+			return fmt.Errorf("invalid 'FullName' len: %d", fullNameLen)
+		}
+	}
+
+	if r.PhoneNumber.Set && r.PhoneNumber.Value != nil {
+		if err := requestValidator.Var(*r.PhoneNumber.Value, "e164"); err != nil {
+			return fmt.Errorf("invalid 'PhoneNumber': %w", err)
+		}
+	}
+
+	return nil
+}
+
 type PatchUserResponse UserDTOResponse
 
 func (h *UsersHTTPHandler) PatchHandler(rw http.ResponseWriter, r *http.Request) {
@@ -59,7 +84,7 @@ func (h *UsersHTTPHandler) PatchHandler(rw http.ResponseWriter, r *http.Request)
 
 	log.Debug(
 		fmt.Sprintf(
-			"PatchUserRequest fields:\nFullName: '%s'\nPhoneNumber: '%s'",
+			"PatchUserRequest fields:\nFullName: '%v'\nPhoneNumber: '%v'",
 			request.FullName,
 			request.PhoneNumber,
 		),
