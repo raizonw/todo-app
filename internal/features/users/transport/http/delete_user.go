@@ -19,6 +19,8 @@ func (h *UsersHTTPHandler) DeleteUser(rw http.ResponseWriter, r *http.Request) {
 			err,
 			"failed to get user id path value",
 		)
+
+		return
 	}
 
 	if err := h.usersService.DeleteUser(ctx, userID); err != nil {
@@ -26,6 +28,8 @@ func (h *UsersHTTPHandler) DeleteUser(rw http.ResponseWriter, r *http.Request) {
 			err,
 			"failed to delete user",
 		)
+
+		return
 	}
 
 	responseHandler.NoContentResponse()

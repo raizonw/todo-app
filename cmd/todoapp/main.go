@@ -32,7 +32,7 @@ func main() {
 	}
 	defer logger.Close()
 
-	logger.Debug("initializing postgres connetction pool")
+	logger.Debug("initializing postgres connection pool")
 	pool, err := core_postgres_pool.NewConnectionPool(
 		ctx,
 		core_postgres_pool.NewConfigMust(),
@@ -49,15 +49,15 @@ func main() {
 	usersService := users_service.NewUsersService(usersRepository)
 	usersTransportHTTP := users_transport_http.NewUsersHTTPHandler(usersService)
 
-	logger.Debug("initializing initializing HTTP server")
+	logger.Debug("initializing HTTP server")
 
 	httpServer := core_http_server.NewHTTPServer(
 		core_http_server.NewConfigMust(),
 		logger,
 		core_http_middleware.RequestID(),
 		core_http_middleware.Logger(logger),
-		core_http_middleware.Panic(),
 		core_http_middleware.Trace(),
+		core_http_middleware.Panic(),
 	)
 
 	apiVersionRouter := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion1)

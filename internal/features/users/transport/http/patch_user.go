@@ -54,6 +54,8 @@ func (h *UsersHTTPHandler) PatchHandler(rw http.ResponseWriter, r *http.Request)
 			err,
 			"failed to get userID path value",
 		)
+
+		return
 	}
 
 	var request PatchUserRequest
@@ -89,8 +91,6 @@ func (h *UsersHTTPHandler) PatchHandler(rw http.ResponseWriter, r *http.Request)
 			request.PhoneNumber,
 		),
 	)
-
-	rw.WriteHeader(http.StatusOK)
 }
 
 func UserPatchFromRequest(request PatchUserRequest) domain.UserPatch {

@@ -2,5 +2,5 @@ package domain
 
 var (
 	UninitializedId    = -1
-	UnitializedVersion = -1
+	UninitializedVersion = -1
 )
