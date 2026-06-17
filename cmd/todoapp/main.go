@@ -11,6 +11,9 @@ import (
 	core_postgres_pool "github.com/raizonw/todo-app/internal/core/repository/postgres/pool"
 	core_http_middleware "github.com/raizonw/todo-app/internal/core/transport/http/middleware"
 	core_http_server "github.com/raizonw/todo-app/internal/core/transport/http/server"
+	tasks_postgres_repository "github.com/raizonw/todo-app/internal/features/tasks/repository/postgres"
+	tasks_service "github.com/raizonw/todo-app/internal/features/tasks/service"
+	tasks_transport_http "github.com/raizonw/todo-app/internal/features/tasks/transport/http"
 	users_postgres_repository "github.com/raizonw/todo-app/internal/features/users/repository/postgres"
 	users_service "github.com/raizonw/todo-app/internal/features/users/service"
 	users_transport_http "github.com/raizonw/todo-app/internal/features/users/transport/http"
@@ -49,6 +52,11 @@ func main() {
 	usersService := users_service.NewUsersService(usersRepository)
 	usersTransportHTTP := users_transport_http.NewUsersHTTPHandler(usersService)
 
+	logger.Debug("initializing feature", zap.String("feature", "tasks"))
+	tasksRepository := tasks_postgres_repository.NewTasksRepository(pool)
+	tasksService := tasks_service.NewTasksService(tasksRepository)
+	tasksTransportHTTP := tasks_transport_http.NewTasksHTTPHandler(tasksService)
+
 	logger.Debug("initializing HTTP server")
 
 	httpServer := core_http_server.NewHTTPServer(
@@ -62,6 +70,7 @@ func main() {
 
 	apiVersionRouter := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion1)
 	apiVersionRouter.RegisterRoutes(usersTransportHTTP.Routes()...)
+	apiVersionRouter.RegisterRoutes(tasksTransportHTTP.Routes()...)
 	httpServer.RegisterAPIRouters(apiVersionRouter)
 
 	if err := httpServer.Run(ctx); err != nil {
