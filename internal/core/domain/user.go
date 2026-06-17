@@ -27,12 +27,12 @@ func NewUser(
 	}
 }
 
-func NewUserUnitialized(fullName string,
+func NewUserUninitialized(fullName string,
 	phoneNumber *string,
 ) User {
 	return NewUser(
 		UninitializedId,
-		UnitializedVersion,
+		UninitializedVersion,
 		fullName,
 		phoneNumber,
 	)

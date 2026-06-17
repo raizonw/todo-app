@@ -21,6 +21,8 @@ func (h *UsersHTTPHandler) GetUser(rw http.ResponseWriter, r *http.Request) {
 			err,
 			"failed to get userID path value",
 		)
+
+		return
 	}
 
 	user, err := h.usersService.GetUser(ctx, userID)
@@ -29,6 +31,8 @@ func (h *UsersHTTPHandler) GetUser(rw http.ResponseWriter, r *http.Request) {
 			err,
 			"failed to get user",
 		)
+
+		return
 	}
 
 	response := GetUserResponse(userDTOFromDomain(user))

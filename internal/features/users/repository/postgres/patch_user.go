@@ -56,7 +56,7 @@ func (r *UsersRepository) PatchUser(
 				core_errors.ErrConflict,
 			)
 		}
-		return domain.User{}, fmt.Errorf("scan error:P %w", err)
+		return domain.User{}, fmt.Errorf("scan error: %w", err)
 	}
 
 	userDomain := domain.NewUser(
