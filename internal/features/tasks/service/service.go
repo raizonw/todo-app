@@ -32,6 +32,12 @@ type TasksRepository interface {
 		ctx context.Context,
 		id int,
 	) error
+
+	PatchTask(
+		ctx context.Context,
+		id int,
+		task domain.Task,
+	) (domain.Task, error)
 }
 
 func NewTasksService(
