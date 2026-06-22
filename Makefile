@@ -65,4 +65,4 @@ logs-cleanup:
 todoapp-run:
 	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs &&\
 	export POSTGRES_HOST=localhost && \
-	go run cmd/todoapp/main.go
+	go run ${PROJECT_ROOT}/todoapp/main.go
