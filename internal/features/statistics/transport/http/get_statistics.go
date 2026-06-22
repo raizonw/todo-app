@@ -12,10 +12,10 @@ import (
 )
 
 type GetStatisticsResponse struct {
-	TaskCreated               int
-	TaskCompleted             int
-	TaskCompletedRate         *float64
-	TaskAverageCompletionTime *string
+	TaskCreated               int      `json:"tasks_created"`
+	TaskCompleted             int      `json:"task_completed"`
+	TaskCompletedRate         *float64 `json:"task_completed_rate"`
+	TaskAverageCompletionTime *string  `json:"task_average_completion_time"`
 }
 
 func (h *StatisticsHTTPHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
@@ -29,6 +29,8 @@ func (h *StatisticsHTTPHandler) GetStatistics(rw http.ResponseWriter, r *http.Re
 			err,
 			"failed to get userID/from/to query params",
 		)
+
+		return
 	}
 
 	statistics, err := h.statisticsService.GetStatistics(ctx, params.userID, params.from, params.to)
@@ -37,6 +39,8 @@ func (h *StatisticsHTTPHandler) GetStatistics(rw http.ResponseWriter, r *http.Re
 			err,
 			"failed to get statistics",
 		)
+
+		return
 	}
 
 	response := toDTOFromDomain(statistics)

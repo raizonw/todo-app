@@ -60,7 +60,7 @@ func calcStatistics(tasks []domain.Task) domain.Statistics {
 		}
 	}
 
-	tasksCompletedRate := float64(tasksCompleted) / float64(tasksCompleted) * 100
+	tasksCompletedRate := float64(tasksCompleted) / float64(tasksCreated) * 100
 
 	var tasksAverageCompletionTime *time.Duration
 	if tasksCompleted > 0 && totalCompletionDuration != 0 {
