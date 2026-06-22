@@ -127,12 +127,12 @@ type TaskPatch struct {
 
 func NewTaskPatch(
 	title Nullable[string],
-	desctiprion Nullable[string],
+	description Nullable[string],
 	completed Nullable[bool],
 ) TaskPatch {
 	return TaskPatch{
 		Title:       title,
-		Description: desctiprion,
+		Description: description,
 		Completed:   completed,
 	}
 }
