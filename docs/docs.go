@@ -15,7 +15,348 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/statistics": {
+            "get": {
+                "description": "Получить статистику по задачам пользователя за определенный период (создано, выполнено, среднее время выполнения)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "statistics"
+                ],
+                "summary": "Получить статистику задач",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата начала периода (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата окончания периода (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статистика задач",
+                        "schema": {
+                            "$ref": "#/definitions/features_statistics_transport_http.GetStatisticsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks": {
+            "get": {
+                "description": "Получить список задач с фильтрацией по user_id и поддержкой пагинации (limit/offset)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Получить список задач",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя-автора задач",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Лимит количества задач",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение относительно начала",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список задач",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/features_tasks_transport_http.TaskDTOResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создать новую задачу для пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Создать задачу",
+                "parameters": [
+                    {
+                        "description": "Тело запроса на создание задачи",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/features_tasks_transport_http.CreateTaskRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Успешно созданная задача",
+                        "schema": {
+                            "$ref": "#/definitions/features_tasks_transport_http.CreateTaskResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{id}": {
+            "get": {
+                "description": "Получить подробную информацию о задаче по её ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Получить задачу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID задачи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Информация о задаче",
+                        "schema": {
+                            "$ref": "#/definitions/features_tasks_transport_http.GetTaskResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удалить задачу из системы по её ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Удалить задачу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID задачи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Успешное удаление (нет содержимого)"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновить информацию о задаче (название, описание, статус завершения)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Обновить задачу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID задачи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Тело запроса на обновление",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/features_tasks_transport_http.PatchTaskRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Обновленная информация о задаче",
+                        "schema": {
+                            "$ref": "#/definitions/features_tasks_transport_http.PatchUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
+            "get": {
+                "description": "Получить список пользователей с поддержкой пагинации (limit/offset)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Получить список пользователей",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Лимит количества пользователей",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение относительно начала",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список пользователей",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/features_users_transport_http.UserDTOResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Создать нового пользователя в системе",
                 "consumes": [
@@ -60,9 +401,312 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/{id}": {
+            "get": {
+                "description": "Получить информацию о пользователе по его ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Получить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Информация о пользователе",
+                        "schema": {
+                            "$ref": "#/definitions/features_users_transport_http.GetUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удалить пользователя из системы по его ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Удалить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Успешное удаление (нет содержимого)"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновить информацию о пользователе (имя и/или номер телефона)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Обновить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Тело запроса на обновление",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/features_users_transport_http.PatchUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Обновленная информация о пользователе",
+                        "schema": {
+                            "$ref": "#/definitions/features_users_transport_http.PatchUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "features_statistics_transport_http.GetStatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "task_average_completion_time": {
+                    "type": "string"
+                },
+                "task_completed": {
+                    "type": "integer"
+                },
+                "task_completed_rate": {
+                    "type": "number"
+                },
+                "tasks_created": {
+                    "type": "integer"
+                }
+            }
+        },
+        "features_tasks_transport_http.CreateTaskRequest": {
+            "type": "object",
+            "required": [
+                "author_user_id",
+                "title"
+            ],
+            "properties": {
+                "author_user_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "minLength": 1
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                }
+            }
+        },
+        "features_tasks_transport_http.CreateTaskResponse": {
+            "type": "object",
+            "properties": {
+                "author_user_id": {
+                    "type": "integer"
+                },
+                "completed": {
+                    "type": "boolean"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "features_tasks_transport_http.GetTaskResponse": {
+            "type": "object",
+            "properties": {
+                "author_user_id": {
+                    "type": "integer"
+                },
+                "completed": {
+                    "type": "boolean"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "features_tasks_transport_http.PatchTaskRequest": {
+            "type": "object",
+            "properties": {
+                "completed": {
+                    "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_types.Nullable-bool"
+                },
+                "description": {
+                    "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_types.Nullable-string"
+                },
+                "title": {
+                    "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_types.Nullable-string"
+                }
+            }
+        },
+        "features_tasks_transport_http.PatchUserResponse": {
+            "type": "object",
+            "properties": {
+                "author_user_id": {
+                    "type": "integer"
+                },
+                "completed": {
+                    "type": "boolean"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "features_tasks_transport_http.TaskDTOResponse": {
+            "type": "object",
+            "properties": {
+                "author_user_id": {
+                    "type": "integer"
+                },
+                "completed": {
+                    "type": "boolean"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "features_users_transport_http.CreateUserRequest": {
             "type": "object",
             "required": [
@@ -102,6 +746,80 @@ const docTemplate = `{
                 }
             }
         },
+        "features_users_transport_http.GetUserResponse": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "type": "string",
+                    "example": "Ivan Ivanov"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+79997776767"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 3
+                }
+            }
+        },
+        "features_users_transport_http.PatchUserRequest": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_types.Nullable-string"
+                },
+                "phone_number": {
+                    "$ref": "#/definitions/github_com_raizonw_todo-app_internal_core_transport_http_types.Nullable-string"
+                }
+            }
+        },
+        "features_users_transport_http.PatchUserResponse": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "type": "string",
+                    "example": "Ivan Ivanov"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+79997776767"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 3
+                }
+            }
+        },
+        "features_users_transport_http.UserDTOResponse": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "type": "string",
+                    "example": "Ivan Ivanov"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+79997776767"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 3
+                }
+            }
+        },
         "github_com_raizonw_todo-app_internal_core_transport_http_response.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -112,6 +830,28 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "short human-readable message"
+                }
+            }
+        },
+        "github_com_raizonw_todo-app_internal_core_transport_http_types.Nullable-bool": {
+            "type": "object",
+            "properties": {
+                "set": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "github_com_raizonw_todo-app_internal_core_transport_http_types.Nullable-string": {
+            "type": "object",
+            "properties": {
+                "set": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "string"
                 }
             }
         }

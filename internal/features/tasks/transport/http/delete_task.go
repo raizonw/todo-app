@@ -8,6 +8,17 @@ import (
 	core_http_utils "github.com/raizonw/todo-app/internal/core/transport/http/utils"
 )
 
+// DeleteTask godoc
+// @Summary Удалить задачу
+// @Description Удалить задачу из системы по её ID
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path int true "ID задачи"
+// @Success 204 "Успешное удаление (нет содержимого)"
+// @Failure 400 {object} core_http_response.ErrorResponse "Bad request"
+// @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Router /tasks/{id} [delete]
 func (h *TasksHTTPHandler) DeleteTask(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := core_logger.FromContext(ctx)
