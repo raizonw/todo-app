@@ -48,6 +48,18 @@ func (r PatchTaskRequest) Validate() error {
 
 type PatchUserResponse TaskDTOResponse
 
+// PatchTask godoc
+// @Summary Обновить задачу
+// @Description Частично обновить информацию о задаче (название, описание, статус завершения)
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path int true "ID задачи"
+// @Param request body PatchTaskRequest true "Тело запроса на обновление"
+// @Success 200 {object} PatchUserResponse "Обновленная информация о задаче"
+// @Failure 400 {object} core_http_response.ErrorResponse "Bad request"
+// @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Router /tasks/{id} [patch]
 func (h *TasksHTTPHandler) PatchTask(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := core_logger.FromContext(ctx)
