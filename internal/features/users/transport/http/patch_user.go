@@ -43,6 +43,18 @@ func (r *PatchUserRequest) Validate() error {
 
 type PatchUserResponse UserDTOResponse
 
+// PatchHandler godoc
+// @Summary Обновить пользователя
+// @Description Частично обновить информацию о пользователе (имя и/или номер телефона)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "ID пользователя"
+// @Param request body PatchUserRequest true "Тело запроса на обновление"
+// @Success 200 {object} PatchUserResponse "Обновленная информация о пользователе"
+// @Failure 400 {object} core_http_response.ErrorResponse "Bad request"
+// @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Router /users/{id} [patch]
 func (h *UsersHTTPHandler) PatchHandler(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := core_logger.FromContext(ctx)
