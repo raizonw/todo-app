@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow — Панель управления задачами</title>
+    
+    <!-- Иконки загружаются опционально: интерфейс должен работать и без CDN -->
+    <script src="https://unpkg.com/lucide@1.21.0/dist/umd/lucide.min.js" defer></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Офлайн экран блокировки приложения (503 Service Unavailable) -->
+    <div id="offline-overlay" class="offline-overlay">
+        <div class="offline-card">
+            <div class="error-code">503</div>
+            
+            <div class="error-ping-container">
+                <div class="ping-circle ping-pulse-1"></div>
+                <div class="ping-circle ping-pulse-2"></div>
+                <div class="ping-icon-wrapper">
+                    <i data-lucide="wifi-off" class="ping-icon" width="28" height="28"></i>
+                </div>
+            </div>
+
+            <h2>Ошибка соединения с сервером</h2>
+            <p>Не удалось подключиться к API-интерфейсу TaskFlow. Убедитесь, что сервер бэкенда запущен и слушает входящие запросы на порту 5050.</p>
+            
+
+
+            <button id="retry-connection-btn" class="btn btn-primary">
+                <i data-lucide="refresh-cw" width="16" height="16"></i>
+                <span>Повторить попытку подключения</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <!-- Левая панель навигации (Sidebar) -->
+        <aside class="sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <i data-lucide="check-square" class="brand-icon" width="24" height="24"></i>
+                    <span class="brand-name">TaskFlow</span>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <button class="nav-item active" data-target="tasks">
+                        <i data-lucide="list-todo"></i>
+                        <span>Задачи</span>
+                    </button>
+                    <button class="nav-item" data-target="users">
+                        <i data-lucide="users"></i>
+                        <span>Пользователи</span>
+                    </button>
+                    <button class="nav-item" data-target="stats">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Статистика</span>
+                    </button>
+                    
+                    <div class="nav-separator"></div>
+                    
+                    <div class="theme-toggle-card">
+                        <div class="theme-toggle-info">
+                            <i class="theme-icon-dark" data-lucide="moon" width="18" height="18"></i>
+                            <i class="theme-icon-light" data-lucide="sun" width="18" height="18"></i>
+                            <span id="theme-toggle-label">Темный режим</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="theme-switch-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="color-picker-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="color-picker-title">Цвет акцента</span>
+                            <span class="reset-color-btn" id="reset-color-btn">Сбросить</span>
+                        </div>
+                        <div class="sv-canvas" id="sv-canvas">
+                            <div class="sv-pointer" id="sv-pointer"></div>
+                        </div>
+                        <div class="hue-slider-container">
+                            <input type="range" id="hue-slider" min="0" max="360" value="238" class="hue-slider">
+                        </div>
+                        <div class="color-preview-row">
+                            <div class="color-preview-left">
+                                <div class="color-preview-circle" id="color-preview"></div>
+                                <span class="color-hex-text" id="color-hex">#6366f1</span>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar" id="current-user-avatar">A</div>
+                    <div class="user-info">
+                        <span class="user-name">Администратор</span>
+                        <span class="user-role">Главный менеджер</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Основная область контента -->
+        <main class="main-content">
+            <!-- Верхняя панель (Header) -->
+            <header class="content-header">
+                <div class="header-title-area">
+                    <h1 id="page-title">Задачи</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-refresh-data" title="Обновить данные" style="padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="refresh-cw" width="16" height="16"></i>
+                        Обновить
+                    </button>
+                </div>
+            </header>
+
+            <!-- Контейнер для динамических разделов -->
+            <div class="content-body">
+                
+                <!-- Раздел: Задачи -->
+                <section id="section-tasks" class="content-section active">
+                    <div class="tasks-layout">
+                        <div class="tasks-header-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <h2 style="font-size: 18px; font-weight: 600; margin: 0; position: relative; top: -2px; line-height: 1;">Список задач</h2>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary);">
+                                    <span>Показывать на странице:</span>
+                                    <select id="tasks-limit-select" class="select-custom" style="padding: 6px 12px; font-size: 13px; border-radius: var(--radius-sm); height: auto; min-width: 60px; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; outline: none;">
+                                        <option value="20" selected>20</option>
+                                        <option value="30">30</option>
+                                        <option value="40">40</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-left: 8px;">
+                                    <span>Автор:</span>
+                                    <select id="tasks-user-filter" class="select-custom" style="padding: 4px 8px; border-radius: var(--radius-md); background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); min-width: 140px;">
+                                        <option value="">Все пользователи</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="open-add-task-modal" class="btn btn-primary">
+                                <i data-lucide="plus-circle" width="16" height="16"></i>
+                                <span>Новая задача</span>
+                            </button>
+                        </div>
+
+                        <div class="task-list" id="tasks-container">
+                            <!-- Задачи будут рендериться динамически -->
+                        </div>
+
+                        <div class="pagination-container" id="tasks-pagination">
+                            <button class="pagination-btn" id="tasks-prev-btn" title="Предыдущая страница">
+                                <i data-lucide="chevron-left" width="16" height="16"></i>
+                            </button>
+                            <div class="pagination-numbers" id="tasks-page-numbers"></div>
+                            <button class="pagination-btn" id="tasks-next-btn" title="Следующая страница">
+                                <i data-lucide="chevron-right" width="16" height="16"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Раздел: Пользователи -->
+                <section id="section-users" class="content-section">
+                    <div class="users-layout">
+                        <div class="users-header-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <h2 style="font-size: 18px; font-weight: 600;">Команда проекта</h2>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary);">
+                                    <span>Показывать на странице:</span>
+                                    <select id="users-limit-select" class="select-custom" style="padding: 6px 12px; font-size: 13px; border-radius: var(--radius-sm); height: auto; min-width: 60px; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; outline: none;">
+                                        <option value="20" selected>20</option>
+                                        <option value="30">30</option>
+                                        <option value="40">40</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="open-add-user-modal" class="btn btn-primary">
+                                <i data-lucide="user-plus" width="16" height="16"></i>
+                                <span>Новый пользователь</span>
+                            </button>
+                        </div>
+                        
+                        <div class="users-grid" id="users-container">
+                            <!-- Карточки пользователей будут рендериться динамически -->
+                        </div>
+
+                        <div class="pagination-container" id="users-pagination">
+                            <button class="pagination-btn" id="users-prev-btn" title="Предыдущая страница">
+                                <i data-lucide="chevron-left" width="16" height="16"></i>
+                            </button>
+                            <div class="pagination-numbers" id="users-page-numbers"></div>
+                            <button class="pagination-btn" id="users-next-btn" title="Следующая страница">
+                                <i data-lucide="chevron-right" width="16" height="16"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Раздел: Статистика -->
+                <section id="section-stats" class="content-section">
+                    <div class="stats-filters" style="display: flex; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; background: var(--bg-card); padding: 16px; border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+                        <div class="input-group" style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 250px;">
+                            <label class="input-label" style="margin: 0; white-space: nowrap;">Пользователь</label>
+                            <select id="stats-user-filter" class="select-custom" style="flex: 1; padding: 10px; border-radius: var(--radius-md); background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); outline: none;">
+                                <option value="">Все пользователи</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px;">
+                            <label class="input-label" style="margin: 0; white-space: nowrap;">От</label>
+                            <input type="date" id="stats-date-from" class="input-field" style="flex: 1; padding: 10px; border-radius: var(--radius-md); background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); outline: none;">
+                        </div>
+                        <div class="input-group" style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px;">
+                            <label class="input-label" style="margin: 0; white-space: nowrap;">До</label>
+                            <input type="date" id="stats-date-to" class="input-field" style="flex: 1; padding: 10px; border-radius: var(--radius-md); background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); outline: none;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button id="btn-apply-stats-filters" class="btn btn-primary" style="padding: 10px 20px;">Применить</button>
+                            <button id="btn-reset-stats-filters" class="btn btn-secondary" style="padding: 10px 20px;">Сбросить</button>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card" data-tooltip="Общее количество созданных задач в системе">
+                            <div class="stat-card-icon">
+                                <i data-lucide="check-square" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-total-tasks">0</span>
+                                <span class="stat-card-label">Всего задач</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-tooltip="Количество успешно завершенных задач">
+                            <div class="stat-card-icon" style="color: var(--success); background-color: rgba(16, 185, 129, 0.1)">
+                                <i data-lucide="check-circle-2" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-completed-tasks">0</span>
+                                <span class="stat-card-label">Выполнено</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-tooltip="Количество задач, находящихся в процессе выполнения">
+                            <div class="stat-card-icon" style="color: var(--warning); background-color: rgba(245, 158, 11, 0.1)">
+                                <i data-lucide="clock" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-pending-tasks">0</span>
+                                <span class="stat-card-label">В работе</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-tooltip="Общее количество зарегистрированных пользователей">
+                            <div class="stat-card-icon" style="color: var(--secondary); background-color: rgba(168, 85, 247, 0.1)">
+                                <i data-lucide="users" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-total-users">0</span>
+                                <span class="stat-card-label">Пользователей</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-tooltip="Средняя длительность выполнения завершенных задач">
+                            <div class="stat-card-icon" style="color: #3b82f6; background-color: rgba(59, 130, 246, 0.1)">
+                                <i data-lucide="timer" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-card-info">
+                                <span class="stat-card-value" id="stat-avg-duration">—</span>
+                                <span class="stat-card-label">Среднее время</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-visuals">
+                        <div class="visual-panel" id="tasks-by-performers-panel">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                                <h3 style="margin: 0;">Задачи по исполнителям</h3>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary);">
+                                    <span>Показывать:</span>
+                                    <select id="stats-chart-limit-select" class="select-custom" style="padding: 4px 8px; font-size: 12px; border-radius: var(--radius-sm); height: auto; min-width: 55px; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; outline: none;">
+                                        <option value="10" selected>10</option>
+                                        <option value="20">20</option>
+                                        <option value="30">30</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="chart-mock-container">
+                                <!-- Будет заполняться динамически -->
+                            </div>
+                            
+                            <!-- Пагинация диаграммы -->
+                            <div class="pagination-container" id="stats-chart-pagination" style="margin-top: 16px; padding: 4px 0; gap: 8px;">
+                                <button class="pagination-btn" id="stats-chart-prev-btn" title="Предыдущая страница">
+                                    <i data-lucide="chevron-left" width="14" height="14"></i>
+                                </button>
+                                <div class="pagination-numbers" id="stats-chart-page-numbers"></div>
+                                <button class="pagination-btn" id="stats-chart-next-btn" title="Следующая страница">
+                                    <i data-lucide="chevron-right" width="14" height="14"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="visual-panel" style="display: flex; align-items: center; justify-content: center;">
+                            <div class="radial-progress-container">
+                                <svg class="radial-svg">
+                                    <circle class="radial-bg" cx="60" cy="60" r="50"></circle>
+                                    <circle id="radial-progress-fill" class="radial-fill" cx="60" cy="60" r="50"></circle>
+                                    <text x="60" y="66" text-anchor="middle" class="radial-text" id="radial-percentage">0%</text>
+                                </svg>
+                                <span class="stat-card-label" style="font-weight: 600;">Успеваемость задач</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно редактирования задачи -->
+    <div class="modal" id="edit-task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать задачу</h2>
+                <button type="button" class="modal-close" id="close-edit-task-modal" title="Закрыть">
+                    <i data-lucide="x" width="20" height="20"></i>
+                </button>
+            </div>
+            <form id="edit-task-form">
+                <input type="hidden" id="edit-task-id">
+                <div class="form-group">
+                    <label for="edit-task-input-title">Название задачи</label>
+                    <input type="text" id="edit-task-input-title" required placeholder="Название задачи..." minlength="1" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="edit-task-input-desc">Описание (необязательно)</label>
+                    <textarea id="edit-task-input-desc" placeholder="Описание задачи..." maxlength="1000"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="cancel-edit-task-modal" style="background: rgba(255,255,255,0.05)">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления пользователя -->
+    <div class="modal" id="add-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Новый пользователь</h2>
+                <button type="button" class="modal-close" id="close-user-modal" title="Закрыть">
+                    <i data-lucide="x" width="20" height="20"></i>
+                </button>
+            </div>
+            <form id="add-user-form">
+                <div class="form-group">
+                    <label for="user-input-name">Полное имя</label>
+                    <input type="text" id="user-input-name" required placeholder="Иван Иванов" minlength="3" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="user-input-phone">Номер телефона (необязательно)</label>
+                    <input type="tel" id="user-input-phone" placeholder="+79998887766" pattern="^\+[0-9]{9,14}$" title="Номер телефона должен быть в международном формате, например +79998887766 (от 10 до 15 символов)">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="cancel-user-modal" style="background: rgba(255,255,255,0.05)">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления задачи -->
+    <div class="modal" id="add-task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Новая задача</h2>
+                <button type="button" class="modal-close" id="close-add-task-modal" title="Закрыть">
+                    <i data-lucide="x" width="20" height="20"></i>
+                </button>
+            </div>
+            <form id="add-task-form">
+                <div class="form-group">
+                    <label for="new-task-input">Название задачи</label>
+                    <input type="text" id="new-task-input" required placeholder="Название..." minlength="1" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="new-task-desc">Описание задачи (необязательно)</label>
+                    <textarea id="new-task-desc" placeholder="Описание (необязательно)..." maxlength="1000"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="new-task-user">Исполнитель</label>
+                    <select id="new-task-user" class="select-custom" required style="display: none;">
+                        <option value="" disabled selected>Выберите исполнителя...</option>
+                    </select>
+                    <div class="custom-select-container" id="custom-user-select-container">
+                        <div class="custom-select-trigger" id="custom-user-select-trigger">
+                            <span class="custom-select-placeholder">Выберите исполнителя...</span>
+                        </div>
+                        <div class="custom-select-options" id="custom-user-select-options">
+                            <div class="custom-select-search-container">
+                                <input type="text" class="custom-select-search-input" id="custom-user-select-search" placeholder="Поиск исполнителя..." autocomplete="off">
+                            </div>
+                            <div class="custom-select-items-container" id="custom-user-select-items">
+                                <!-- Опции будут заполняться динамически -->
+                            </div>
+                            <div class="custom-select-pagination-container" id="custom-user-select-pagination">
+                                <!-- Пагинация будет заполняться динамически -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="cancel-add-task-modal" style="background: rgba(255,255,255,0.05)">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования пользователя -->
+    <div class="modal" id="edit-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать пользователя</h2>
+                <button type="button" class="modal-close" id="close-edit-user-modal" title="Закрыть">
+                    <i data-lucide="x" width="20" height="20"></i>
+                </button>
+            </div>
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label for="edit-user-input-name">Полное имя</label>
+                    <input type="text" id="edit-user-input-name" required placeholder="Иван Иванов" minlength="3" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="edit-user-input-phone">Номер телефона (необязательно)</label>
+                    <input type="tel" id="edit-user-input-phone" placeholder="+79998887766" pattern="^\+[0-9]{9,14}$" title="Номер телефона должен быть в международном формате, например +79998887766 (от 10 до 15 символов)">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="cancel-edit-user-modal" style="background: rgba(255,255,255,0.05)">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Логика MVP функционала -->
+    <script src="app.js" defer></script>
+</body>
+</html>
