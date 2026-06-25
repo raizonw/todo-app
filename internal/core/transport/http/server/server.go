@@ -39,10 +39,17 @@ func (h *HTTPServer) RegisterAPIRouters(routers ...*APIVersionRouter) {
 
 		h.mux.Handle(
 			prefix+"/",
-			http.StripPrefix(prefix, router),
+			http.StripPrefix(prefix, router.WithMiddleware()),
 		)
 	}
 
+}
+
+func (s *HTTPServer) RegisterRoutes(routes ...Route) {
+	for _, route := range routes {
+		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
+		s.mux.Handle(pattern, route.Handler)
+	}
 }
 
 func (s *HTTPServer) RegisterSwagger() {
@@ -54,7 +61,7 @@ func (s *HTTPServer) RegisterSwagger() {
 	)
 
 	s.mux.HandleFunc(
-		"swagger/doc.json",
+		"/swagger/doc.json",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
