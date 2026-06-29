@@ -7,12 +7,12 @@ env-up:
 	@docker compose up -d todoapp-postgres
 
 env-down:
-	@docker compose down todoapp-postgres
+	@docker compose stop todoapp-postgres
 
 env-cleanup:
 	@read -p "Очистить все volume файлы окружения? Опасность утери данных. [y/N]: " ans; \
 	if [ "$$ans" = "y" ]; then \
-		docker compose down todoapp-postgres port-forwarder web-server && \
+		docker compose down && \
 		rm -rf ${PROJECT_ROOT}/out/pgdata && \
 		rm -rf ${PROJECT_ROOT}/out/caddy_data && \
 		echo "Файлы окружения очищены"; \
@@ -24,7 +24,7 @@ env-port-forward:
 	@docker compose up -d port-forwarder
 
 env-port-close:
-	@docker compose down port-forwarder
+	@docker compose stop port-forwarder
 
 migrate-create:
 	@if [ -z "$(seq)" ]; then \
@@ -61,6 +61,7 @@ logs-cleanup:
 	else \
 		echo "Очистка логов отменена"; \
 	fi
+
 todoapp-run:
 	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs &&\
 	export POSTGRES_HOST=localhost && \
@@ -70,13 +71,13 @@ todoapp-deploy:
 	@docker compose up -d --build todoapp
 
 todoapp-undeploy:
-	@docker compose down todoapp
+	@docker compose stop todoapp
 
 web-deploy:
-	@docker compose up -d --build web-server
+	@docker compose up -d web-server
 
 web-undeploy:
-	@docker compose down web-server
+	@docker compose stop web-server
 
 swagger-gem:
 	@docker compose run --rm swagger \

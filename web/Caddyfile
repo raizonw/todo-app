@@ -1,7 +1,7 @@
-{$CADDY_HOST:localhost} {
-    @api path /api/*
-    reverse_proxy @api todoapp:5050
+:80 {
+	@backend path /api/* /swagger/*
+	reverse_proxy @backend todoapp:5050
 
-    root * /web/public
-    file_server
+	root * /web/public
+	file_server
 }
