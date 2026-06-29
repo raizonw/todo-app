@@ -1,4 +1,18 @@
 services:
+  web-server:
+    image: caddy:2.11.1-alpine
+    container_name: web-server
+    environment:
+      - CADDY_HOST=${CADDY_HOST:-localhost}
+    volumes:
+      - ${PROJECT_ROOT}/web/Caddyfile:/etc/caddy/Caddyfile
+      - ${PROJECT_ROOT}/out/caddy_data:/data
+      - ${PROJECT_ROOT}/web/public:/web/public
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+
   todoapp:
     build:
       context: ${PROJECT_ROOT}
@@ -20,8 +34,6 @@ services:
       - LOGGER_FOLDER=/app/out/logs
     volumes:
       - ${PROJECT_ROOT}/out/logs:/app/out/logs
-    ports:
-      - "5050:5050"
     restart: always
 
   todoapp-postgres:

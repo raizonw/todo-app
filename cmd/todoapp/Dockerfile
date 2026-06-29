@@ -15,7 +15,7 @@ FROM alpine:3.23
     RUN apk --no-cache add ca-certificates tzdata                                                                                                                  
     WORKDIR /app                                                                                               
     COPY --from=builder /app/todoapp /app/todoapp    
-    COPY --from=builder /app/public /app/public                                             
+    COPY --from=builder /app/web/public /app/public                                        
     ENV PROJECT_ROOT=/app
     USER 65534:65534                                                                                            
     ENTRYPOINT ["/app/todoapp"]
