@@ -25,7 +25,7 @@ func NewWebHTTPHandler(
 }
 
 func (h *WebHTTPHandler) Routes() []core_http_server.Route {
-	publicPath := path.Join(os.Getenv("PROJECT_ROOT"), "public")
+	publicPath := path.Join(os.Getenv("PROJECT_ROOT"), "web", "public")
 	fileServer := http.FileServer(http.Dir(publicPath))
 	return []core_http_server.Route{
 		{

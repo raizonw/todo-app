@@ -1,0 +1,1808 @@
+{
+  "info": {
+    "_postman_id": "243182f7-7ffc-4697-bce5-273ed3122d26",
+    "name": "Todo App API",
+    "description": "Postman-коллекция для тестирования Golang Todo App REST API.\n\n## Быстрый старт\n1. Запусти приложение: `make env-up && make todoapp-run`\n2. Импортируй этот файл в Postman (File → Import)\n3. Начни с папки **Users** — создай пользователя\n4. Переходи в папку **Tasks** — создавай задачи для этого пользователя\n\n## Переменные коллекции\n- `baseUrl` — базовый URL сервера\n- `userId` — ID пользователя (заполняется автоматически при создании)\n- `taskId` — ID основной задачи (заполняется автоматически при создании)\n- `taskWithoutDescriptionId` — ID задачи без описания (заполняется автоматически при создании)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54112283",
+    "_collection_link": "https://go.postman.co/collection/54112283-243182f7-7ffc-4697-bce5-273ed3122d26?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Создать пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема пользователя содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"full_name\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"phone_number\");",
+                  "});",
+                  "",
+                  "pm.test(\"full_name совпадает с ожидаемым\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.full_name).to.eql('Иван Иванов');",
+                  "});",
+                  "",
+                  "pm.test(\"phone_number совпадает с ожидаемым\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.phone_number).to.eql('+79997776767');",
+                  "});",
+                  "",
+                  "// Автоматически сохраняем id созданного пользователя в переменную",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set(\"userId\", body.id);",
+                  "    console.log(\"userId обновлён:\", body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Иван Иванов\",\n  \"phone_number\": \"+79997776767\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Создаёт нового пользователя. Поле `full_name` обязательно (3-100 символов). `phone_number` опционально.\n\nСкрипт автоматически сохранит id в переменную `userId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Получить список пользователей",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () { pm.response.to.be.json; });",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ должен быть массивом пользователей\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an(\"array\");",
+                  "    body.forEach(user => {",
+                  "        pm.expect(user).to.have.property(\"id\").that.is.a(\"number\");",
+                  "        pm.expect(user).to.have.property(\"version\").that.is.a(\"number\");",
+                  "        pm.expect(user).to.have.property(\"full_name\").that.is.a(\"string\");",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Количество элементов не превышает limit\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.length).to.be.lte(10);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?limit=10&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Максимальное количество пользователей в ответе"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Смещение (для пагинации). offset=10 вернёт записи начиная с 11-й"
+                }
+              ]
+            },
+            "description": "Возвращает список всех пользователей с пагинацией."
+          },
+          "response": []
+        },
+        {
+          "name": "Получить пользователя по ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема пользователя содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"full_name\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"phone_number\");",
+                  "});",
+                  "",
+                  "pm.test(\"ID в ответе совпадает с запрошенным\", function () {",
+                  "    const body = pm.response.json();",
+                  "    const requestedId = parseInt(pm.collectionVariables.get(\"userId\"));",
+                  "    pm.expect(body.id).to.eql(requestedId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Возвращает данные одного пользователя по его ID. Использует переменную `userId`."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Получить несуществующего пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 404 Not Found\", function () { pm.response.to.have.status(404); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "999999"
+              ]
+            },
+            "description": "Запрашиваем несуществующего пользователя. Ожидаем ошибку 4xx."
+          },
+          "response": []
+        },
+        {
+          "name": "Обновить пользователя (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема пользователя содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"full_name\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"phone_number\");",
+                  "});",
+                  "",
+                  "pm.test(\"full_name совпадает с ожидаемым\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.full_name).to.eql('Иван Петров');",
+                  "});",
+                  "",
+                  "pm.test(\"phone_number совпадает с ожидаемым\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.phone_number).to.eql('+79001234567');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Иван Петров\",\n  \"phone_number\": \"+79001234567\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Частичное обновление пользователя. Передавай только те поля, которые нужно изменить: `full_name` и/или `phone_number`. Чтобы явно очистить опциональное поле, можно передать `null`."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Создать пользователя — пустой full_name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"\",\n  \"phone_number\": \"+79997776767\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Негативный тест: пустое имя нарушает ограничение minLength: 3. Ожидаем ошибку 400."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Получить пользователя — нечисловой ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "abc"
+              ]
+            },
+            "description": "Проверяем валидацию path-параметра id: строка вместо числа должна вернуть 400."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Получить пользователя — отрицательный ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 4xx\", function () { pm.expect(pm.response.code).to.be.within(400, 499); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "-1"
+              ]
+            },
+            "description": "Проверяем отрицательный id. Ожидаем клиентскую ошибку."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Создать пользователя — пустое тело",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Проверяем обработку пустого body."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Создать пользователя — битый JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Иван\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Проверяем обработку невалидного JSON."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Создать пользователя — слишком короткий full_name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Ив\",\n  \"phone_number\": \"+79997776767\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Проверяем minLength для full_name."
+          },
+          "response": []
+        }
+      ],
+      "description": "Управление пользователями. Начни отсюда — создай пользователя."
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Создать задачу",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 201 Created\", function () { pm.response.to.have.status(201); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема задачи содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"title\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"description\");",
+                  "    pm.expect(body).to.have.property(\"completed\").that.is.a(\"boolean\");",
+                  "    pm.expect(body).to.have.property(\"created_at\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"completed_at\");",
+                  "    pm.expect(body).to.have.property(\"author_user_id\").that.is.a(\"number\");",
+                  "});",
+                  "",
+                  "pm.test(\"Задача создана с ожидаемыми значениями\", function () {",
+                  "    const body = pm.response.json();",
+                  "    const userId = parseInt(pm.collectionVariables.get(\"userId\"));",
+                  "    pm.expect(body.title).to.eql(\"Купить молоко\");",
+                  "    pm.expect(body.description).to.eql(\"Нужно купить ультрапастеризованное 2.5%, 1 литр\");",
+                  "    pm.expect(body.completed).to.be.false;",
+                  "    pm.expect(body.author_user_id).to.eql(userId);",
+                  "});",
+                  "",
+                  "// Автоматически сохраняем id задачи",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set(\"taskId\", body.id);",
+                  "    console.log(\"taskId обновлён:\", body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author_user_id\": {{userId}},\n  \"title\": \"Купить молоко\",\n  \"description\": \"Нужно купить ультрапастеризованное 2.5%, 1 литр\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            },
+            "description": "Создаёт новую задачу. `author_user_id` и `title` — обязательные. Описание опционально."
+          },
+          "response": []
+        },
+        {
+          "name": "Создать задачу — без описания",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 201 Created\", function () { pm.response.to.have.status(201); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема задачи содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"title\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"description\");",
+                  "    pm.expect(body).to.have.property(\"completed\").that.is.a(\"boolean\");",
+                  "    pm.expect(body).to.have.property(\"created_at\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"completed_at\");",
+                  "    pm.expect(body).to.have.property(\"author_user_id\").that.is.a(\"number\");",
+                  "});",
+                  "",
+                  "pm.test(\"Задача создана без описания\", function () {",
+                  "    const body = pm.response.json();",
+                  "    const userId = parseInt(pm.collectionVariables.get(\"userId\"));",
+                  "    pm.expect(body.title).to.eql(\"Задача без описания\");",
+                  "    pm.expect(body.description).to.be.oneOf([null, undefined]);",
+                  "    pm.expect(body.completed).to.be.false;",
+                  "    pm.expect(body.author_user_id).to.eql(userId);",
+                  "});",
+                  "",
+                  "// Автоматически сохраняем id второй созданной задачи для cleanup",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set(\"taskWithoutDescriptionId\", body.id);",
+                  "    console.log(\"taskWithoutDescriptionId обновлён:\", body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author_user_id\": {{userId}},\n  \"title\": \"Задача без описания\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            },
+            "description": "Проверяем, что задача создаётся без поля description — оно опциональное."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Создать задачу — без title",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author_user_id\": {{userId}},\n  \"description\": \"Описание есть, а названия нет\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            },
+            "description": "Негативный тест: пропускаем обязательное поле `title`. Ожидаем 400."
+          },
+          "response": []
+        },
+        {
+          "name": "Получить список задач пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () { pm.response.to.be.json; });",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ должен быть массивом задач пользователя\", function () {",
+                  "    const body = pm.response.json();",
+                  "    const userId = parseInt(pm.collectionVariables.get(\"userId\"));",
+                  "    pm.expect(body).to.be.an(\"array\");",
+                  "    pm.expect(body.length).to.be.lte(10);",
+                  "    body.forEach(task => {",
+                  "        pm.expect(task).to.have.property(\"id\").that.is.a(\"number\");",
+                  "        pm.expect(task).to.have.property(\"title\").that.is.a(\"string\");",
+                  "        pm.expect(task).to.have.property(\"completed\").that.is.a(\"boolean\");",
+                  "        pm.expect(task.author_user_id).to.eql(userId);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?user_id={{userId}}&limit=10&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "{{userId}}",
+                  "description": "Фильтр по пользователю"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Возвращает задачи конкретного пользователя."
+          },
+          "response": []
+        },
+        {
+          "name": "Получить задачу по ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема задачи содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"title\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"description\");",
+                  "    pm.expect(body).to.have.property(\"completed\").that.is.a(\"boolean\");",
+                  "    pm.expect(body).to.have.property(\"created_at\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"completed_at\");",
+                  "    pm.expect(body).to.have.property(\"author_user_id\").that.is.a(\"number\");",
+                  "});",
+                  "",
+                  "pm.test(\"ID задачи совпадает с запрошенным\", function () {",
+                  "    const body = pm.response.json();",
+                  "    const taskId = parseInt(pm.collectionVariables.get(\"taskId\"));",
+                  "    pm.expect(body.id).to.eql(taskId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Обновить задачу — отметить как выполненную",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема задачи содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"title\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"description\");",
+                  "    pm.expect(body).to.have.property(\"completed\").that.is.a(\"boolean\");",
+                  "    pm.expect(body).to.have.property(\"created_at\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"completed_at\");",
+                  "    pm.expect(body).to.have.property(\"author_user_id\").that.is.a(\"number\");",
+                  "});",
+                  "",
+                  "pm.test(\"Задача отмечена как выполненная\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.completed).to.be.true;",
+                  "    pm.expect(body.completed_at).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "Отмечаем задачу как выполненную. После этого проверь, что `completed_at` заполнился."
+          },
+          "response": []
+        },
+        {
+          "name": "Обновить задачу — изменить название и описание",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема задачи содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"id\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"version\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"title\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"description\");",
+                  "    pm.expect(body).to.have.property(\"completed\").that.is.a(\"boolean\");",
+                  "    pm.expect(body).to.have.property(\"created_at\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"completed_at\");",
+                  "    pm.expect(body).to.have.property(\"author_user_id\").that.is.a(\"number\");",
+                  "});",
+                  "",
+                  "pm.test(\"Название и описание задачи обновились\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.title).to.eql(\"Купить молоко и хлеб\");",
+                  "    pm.expect(body.description).to.eql(\"Молоко 2.5% + хлеб бородинский\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Купить молоко и хлеб\",\n  \"description\": \"Молоко 2.5% + хлеб бородинский\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Создать задачу — несуществующий author_user_id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 404 Not Found\", function () { pm.response.to.have.status(404); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author_user_id\": 999999,\n  \"title\": \"Задача для несуществующего пользователя\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            },
+            "description": "Проверяем создание задачи для пользователя, которого нет в базе."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Получить задачу — нечисловой ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "abc"
+              ]
+            },
+            "description": "Проверяем валидацию path-параметра id: строка вместо числа должна вернуть 400."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Получить список задач — отрицательный limit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 4xx\", function () { pm.expect(pm.response.code).to.be.within(400, 499); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?user_id={{userId}}&limit=-1&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "-1"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Проверяем граничный случай пагинации: отрицательный limit."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Обновить задачу — пустое тело",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "Проверяем PATCH с пустым body."
+          },
+          "response": []
+        },
+        {
+          "name": "[Негативный] Обновить несуществующую задачу",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 404 Not Found\", function () { pm.response.to.have.status(404); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "999999"
+              ]
+            },
+            "description": "Проверяем PATCH для задачи, которой нет."
+          },
+          "response": []
+        }
+      ],
+      "description": "Управление задачами. Перед созданием задачи убедись, что переменная `userId` заполнена."
+    },
+    {
+      "name": "Statistics",
+      "item": [
+        {
+          "name": "Получить статистику за период",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () { pm.response.to.be.json; });",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Схема статистики содержит ожидаемые поля\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"tasks_created\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"task_completed\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"task_completed_rate\");",
+                  "    pm.expect(body).to.have.property(\"task_average_completion_time\");",
+                  "});",
+                  "",
+                  "pm.test(\"task_completed_rate от 0 до 100 или null\", function () {",
+                  "    const body = pm.response.json();",
+                  "    if (body.task_completed_rate !== null) {",
+                  "        pm.expect(body.task_completed_rate).to.be.within(0, 100);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/statistics?user_id={{userId}}&from={{statsFrom}}&to={{statsTo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "statistics"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "{{userId}}",
+                  "description": "ID пользователя"
+                },
+                {
+                  "key": "from",
+                  "value": "{{statsFrom}}",
+                  "description": "Начало периода (YYYY-MM-DD)"
+                },
+                {
+                  "key": "to",
+                  "value": "{{statsTo}}",
+                  "description": "Конец периода (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "Возвращает статистику задач: сколько создано, выполнено, процент выполнения и среднее время выполнения."
+          },
+          "response": []
+        },
+        {
+          "name": "Статистика — без параметра user_id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Ответ должен быть валидным JSON\", function () { pm.response.to.be.json; });",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ содержит поля статистики\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"tasks_created\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"task_completed\").that.is.a(\"number\");",
+                  "    pm.expect(body).to.have.property(\"task_completed_rate\");",
+                  "    pm.expect(body).to.have.property(\"task_average_completion_time\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/statistics?from={{statsFrom}}&to={{statsTo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "statistics"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{statsFrom}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{statsTo}}"
+                }
+              ]
+            },
+            "description": "Исследовательский тест: смотрим что вернёт сервер без параметра user_id — 200 или 400?"
+          },
+          "response": []
+        }
+      ],
+      "description": "Статистика по задачам пользователя за выбранный период."
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        {
+          "name": "Удалить задачу",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 204 No Content\", function () { pm.response.to.have.status(204); });",
+                  "",
+                  "pm.test(\"Тело ответа должно быть пустым\", function () { pm.expect(pm.response.text()).to.be.empty; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Проверить, что задача удалена",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 404 Not Found\", function () { pm.response.to.have.status(404); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "После DELETE повторно запрашиваем задачу и ожидаем 404."
+          },
+          "response": []
+        },
+        {
+          "name": "Удалить задачу без описания",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 204 No Content\", function () { pm.response.to.have.status(204); });",
+                  "",
+                  "pm.test(\"Тело ответа должно быть пустым\", function () { pm.expect(pm.response.text()).to.be.empty; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskWithoutDescriptionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskWithoutDescriptionId}}"
+              ]
+            },
+            "description": "Удаляет вторую задачу, созданную позитивным кейсом без description. Без этого нельзя удалить пользователя из-за foreign key."
+          },
+          "response": []
+        },
+        {
+          "name": "Проверить, что задача без описания удалена",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 404 Not Found\", function () { pm.response.to.have.status(404); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskWithoutDescriptionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskWithoutDescriptionId}}"
+              ]
+            },
+            "description": "После DELETE повторно запрашиваем вторую задачу и ожидаем 404."
+          },
+          "response": []
+        },
+        {
+          "name": "Удалить пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 204 No Content\", function () { pm.response.to.have.status(204); });",
+                  "",
+                  "pm.test(\"Тело ответа должно быть пустым\", function () { pm.expect(pm.response.text()).to.be.empty; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Удаляет пользователя навсегда. Запускай в конце, когда уже протестировал задачи."
+          },
+          "response": []
+        },
+        {
+          "name": "Проверить, что пользователь удалён",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус-код должен быть 404 Not Found\", function () { pm.response.to.have.status(404); });",
+                  "",
+                  "pm.test(\"Ответ с ошибкой должен быть JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type ответа должен быть application/json\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"В теле ошибки есть поля error и message\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\").that.is.a(\"string\");",
+                  "    pm.expect(body).to.have.property(\"message\").that.is.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "После DELETE повторно запрашиваем пользователя и ожидаем 404."
+          },
+          "response": []
+        }
+      ],
+      "description": "Удаление тестовых данных после основных проверок."
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5050/api/v1",
+      "description": "Базовый URL приложения. Если запущено через Docker/Caddy — измени на http://localhost/api/v1"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "description": "ID пользователя. Заполняется автоматически после создания первого пользователя."
+    },
+    {
+      "key": "taskId",
+      "value": "1",
+      "description": "ID задачи. Заполняется автоматически после создания первой задачи."
+    },
+    {
+      "key": "taskWithoutDescriptionId",
+      "value": "1",
+      "description": "ID задачи без description. Заполняется автоматически после создания задачи без описания."
+    },
+    {
+      "key": "baseUrlDocker",
+      "value": "http://localhost/api/v1",
+      "description": "Base URL при запуске через Docker/Caddy."
+    },
+    {
+      "key": "statsFrom",
+      "value": "2026-06-01",
+      "description": "Дата начала периода статистики (YYYY-MM-DD)."
+    },
+    {
+      "key": "statsTo",
+      "value": "2026-06-30",
+      "description": "Дата конца периода статистики (YYYY-MM-DD)."
+    }
+  ]
+}
