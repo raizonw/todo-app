@@ -1941,8 +1941,11 @@ async function submitTask() {
             closeModal('task-modal-overlay'); loadTasks();
         } catch(e) { toast(e.message, 'error'); }
     } else {
-        const authorId = document.getElementById('task-author-id').value.trim();
-        if (!authorId) { toast('Author User ID is required', 'error'); return; }
+        const authorId = Number(document.getElementById('task-author-id').value.trim());
+        if (!Number.isInteger(authorId) || authorId <= 0) {
+            toast('Некорректный автор', 'error');
+            return;
+        }
         const body = { title, author_user_id: authorId };
         if (desc) body.description = desc;
         try {
