@@ -406,3 +406,25 @@ func TestPatchTask(t *testing.T) {
 		}
 	})
 }
+
+func TestCreateTask_ContextCancellationAndDeadline(t *testing.T) {
+	t.Run("context canceled", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+		createdAt := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+		task := domain.NewTask(1, 1, "title", nil, false, createdAt, nil, 10)
+		repo := fakeRepository{
+			createTaskFunc: func(ctx context.Context, task domain.Task) (domain.Task, error) {
+				return domain.Task{}, ctx.Err()
+			},
+		}
+
+		service := newTasksService(&repo)
+
+		_, err := service.CreateTask(ctx, task)
+
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context.Canceled, got: %v", err)
+		}
+	})
+}

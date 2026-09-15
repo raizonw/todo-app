@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/raizonw/todo-app/internal/core/domain"
+	core_logger "github.com/raizonw/todo-app/internal/core/logger"
+	"go.uber.org/zap"
 )
 
 type fakeService struct {
@@ -39,28 +40,80 @@ func (f fakeService) PatchTask(ctx context.Context, id int, patch domain.TaskPat
 	return f.patchTask(ctx, id, patch)
 }
 
-func ptr[T any](v T) *T {
-	return &v
-}
-
 func TestHandler(t *testing.T) {
-	t.Run("Successs", func(t *testing.T) {
-		createdAt := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	log := &core_logger.Logger{
+		Logger: zap.NewNop(),
+	}
+	t.Run("successsful create", func(t *testing.T) {
+
+		called := false
+		var receivedTask domain.Task
 
 		body := strings.NewReader(`{
 			"title": "Купить молоко",
 			"description": "2 литра",
 			"author_user_id": 1
 		}`)
+		title, description := "Купить молоко", "2 литра"
+
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/tasks", body)
+
+		req = req.WithContext(core_logger.ToContext(req.Context(), log))
 		rec := httptest.NewRecorder()
-		task := domain.NewTask(1, 1, "Купить молоко", ptr("2 литра"), false, createdAt, nil, 1)
 		service := fakeService{
 			createTask: func(ctx context.Context, task domain.Task) (domain.Task, error) {
+				called = true
+				receivedTask = task
 				return task, nil
 			},
 		}
 		handler := NewTasksHTTPHandler(service)
 
+		handler.CreateTask(rec, req)
+
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("status = %d, want %d", rec.Code, http.StatusCreated)
+		}
+
+		if !called {
+			t.Error("service dont get called")
+		}
+
+		if receivedTask.Title != title {
+			t.Errorf("title = %q, want %q", receivedTask.Title, title)
+		}
+
+		if receivedTask.AuthorUserID != 1 {
+			t.Errorf("author user id = %d, want 1", receivedTask.AuthorUserID)
+		}
+
+		if receivedTask.Description == nil || *receivedTask.Description != description {
+			t.Errorf("unexpected description: %v", receivedTask.Description)
+		}
+
 	})
+
+	t.Run("invalid JSON", func(t *testing.T) {
+		body := strings.NewReader(`{"title":}`)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/tasks", body)
+		req = req.WithContext(core_logger.ToContext(req.Context(), log))
+		res := httptest.NewRecorder()
+
+		service := fakeService{
+			createTask: func(ctx context.Context, task domain.Task) (domain.Task, error) {
+				t.Fatal("sevice must not be called")
+				return domain.Task{}, nil
+			},
+		}
+
+		handler := NewTasksHTTPHandler(service)
+
+		handler.CreateTask(res, req)
+
+		if res.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d, want %d", res.Code, http.StatusBadRequest)
+		}
+	})
+
 }
